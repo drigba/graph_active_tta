@@ -1,0 +1,10 @@
+defaults:
+  - _self_
+  - filter: hard_filter
+# Example augmentor config
+type_: graph_space
+augmentations:  # Now a list
+  - type_: feature_noising
+    p: 0.4
+  - type_: edge_dropout
+    p: 0.4

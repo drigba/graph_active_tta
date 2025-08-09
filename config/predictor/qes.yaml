@@ -1,0 +1,9 @@
+type_: qes
+number_of_augmentations: 1
+augmentor:
+  type_: graph_space
+  augmentation:
+    type_: edge_dropout
+    p: 0.1
+  filter:
+    type_: no_filter

@@ -1,0 +1,42 @@
+defaults:
+  - base_config
+  - hydra: default
+  - data: cora_ml
+  - model: gcn
+  - acquisition_strategy: aleatoric_propagated
+  - initial_acquisition_strategy: balanced
+  - evaluation: standard_no_plots
+  - predictor: eqs  # or eqs, qes
+  - _self_
+
+initial_acquisition_strategy:
+  num_to_acquire_per_step: 1
+  num_steps: ${data.num_classes}
+
+acquisition_strategy:
+  num_steps: ${eval:${data.num_classes} * 5 - \(${initial_acquisition_strategy.num_steps} * ${initial_acquisition_strategy.num_to_acquire_per_step}\)}
+  num_to_acquire_per_step: 1
+  tta: {}
+  adaptation: {}
+
+
+
+# Where to write seml, hydra, wandb logs etc.
+#output_base_dir: /home/banfizsombor/work/uq-for-al-on-graphs/datagraph-al/runs/${wandb.group}/${wandb.name}
+output_base_dir: ./output2/runs/${data.name}/${model.type_}/${acquisition_strategy.name}/${wandb.name}
+seed: ~
+
+wandb:
+  id: ~
+  entity: ~
+  project: graph-al
+  group: ${model.type_}
+  mode: ~
+  name: ~
+  dir: ${output_base_dir}
+  tags: ~
+  # log_internal_dir: ../../../../dev/null #/nfs/staff-ssd/fuchsgru/wandb/null # something that links to /dev/null to discard internal logs
+
+hydra:
+  job:
+    name: ${wandb.group}

@@ -1,0 +1,2 @@
+type_: metric_filter
+metric: brier_score  # or brier_score, absolute_difference

@@ -1,0 +1,12 @@
+defaults:
+#  - base_npz
+  - base_torch_geometric
+root: /home/banfizsombor/work/uq-for-al-on-graphs/datagraph-al/data
+torch_geometric_dataset: CITESEER
+
+name: citeseer
+#path: /home/banfizsombor/work/uq-for-al-on-graphs/datagraph-ssl-data-raw/citeseer.npz
+#preprocessing: NONE
+num_classes: 6
+
+# has 6 classes

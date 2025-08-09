@@ -1,0 +1,9 @@
+# Example augmentor config
+type_: latent_space
+augmentations:  # Now a list
+  - type_: feature_masking
+    p: 0.1
+  - type_: edge_dropout
+    p: 0.2
+filter:
+  type_: hard_filter

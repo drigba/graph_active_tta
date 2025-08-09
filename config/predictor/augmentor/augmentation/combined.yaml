@@ -1,0 +1,6 @@
+type_: combined
+augmentations:
+  - type_: edge_dropout
+    p: 0.2
+  - type_: feature_masking
+    p: 0.1

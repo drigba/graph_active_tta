@@ -1,0 +1,2 @@
+type_: edge_dropout
+p: 0.1
