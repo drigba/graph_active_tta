@@ -1,10 +1,15 @@
-from graph_al.predictor.base_predictor import BasePredictor, EQSPredictor, QESPredictor, NormalPredictor
+from graph_al.predictor.bald import BALDPredictor
+from graph_al.predictor.base_predictor import  BasePredictor, NormalPredictor
+
 from graph_al.predictor.config import PredictorType
 from graph_al.model.base import BaseModel
 from graph_al.acquisition.base import BaseAcquisitionStrategy
 from graph_al.augmentation.base_augmentor import BaseAugmentor
 from graph_al.data.base import Dataset
 from graph_al.predictor.config import PredictorConfig
+from graph_al.predictor.eqs import EQSPredictor
+from graph_al.predictor.eqs_recursive import EQSRecursivePredictor
+from graph_al.predictor.qes import QESPredictor
 from torch import Generator
 from typing import Optional
 from graph_al.augmentation.build import get_augmentor
@@ -54,5 +59,33 @@ def get_predictor(
                 number_of_augmentations=getattr(config, "number_of_augmentations", 1),
                 generator=generator,
             )
+        case PredictorType.EQS_RECURSIVE:
+            augmentor = get_augmentor(
+                config.augmentor,
+                model=model,
+            )
+            return EQSRecursivePredictor(
+                model=model,
+                device=device,
+                acquisition_strategy=acquisition_strategy,
+                augmentor=augmentor,
+                number_of_augmentations=getattr(config, "number_of_augmentations", 1),
+                generator=generator,
+                outer_loops=getattr(config, "outer_loops", 1),
+                metric_name=getattr(config, "metric_name", "brier_score"),
+            )
+        case PredictorType.BALD:
+            augmentor = get_augmentor(
+                config.augmentor,
+                model=model,
+            )
+            return BALDPredictor(
+                model=model,
+                device=device,
+                acquisition_strategy=acquisition_strategy,
+                augmentor=augmentor,
+                number_of_augmentations=getattr(config, "number_of_augmentations", 1),
+                generator=generator,
+            )  
         case _:
             raise ValueError(f"Unsupported predictor type {config.type_}")

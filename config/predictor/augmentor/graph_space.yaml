@@ -1,6 +1,6 @@
 defaults:
   - _self_
-  - filter: hard_filter
+  - filter: firm_filter
 # Example augmentor config
 type_: graph_space
 augmentations:  # Now a list

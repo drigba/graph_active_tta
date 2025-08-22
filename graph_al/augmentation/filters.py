@@ -1,5 +1,6 @@
 from abc import abstractmethod
 from enum import StrEnum
+from graph_al.augmentation.config import SoftFilterMode
 import torch
 from graph_al.model.prediction import Prediction
 from graph_al.data.base import Data
@@ -41,7 +42,7 @@ class BaseFilter:
         augmented_outputs: List[Prediction],
         graph: List[Data]
     ) -> torch.Tensor:
-        return self.mask(original_output, augmented_outputs, graph)
+        return torch.vstack(self.mask(original_output, augmented_outputs, graph))
     
 class NoFilter(BaseFilter):
     """
@@ -73,18 +74,22 @@ class HardFilter(BaseFilter):
         Returns a mask based on a hard threshold applied to the augmented predictions.
         """
         masks = []
+        pred_o = original_output.get_predictions(propagated=True)
         for augmented_output in augmented_outputs:
-            pred_o = original_output.get_predictions(propagated=True)
             pred_a = augmented_output.get_predictions(propagated=True)
             mask = pred_o == pred_a
             masks.append(mask)
-        masks = torch.stack(masks, dim=0)
         return masks
 
 class SoftFilter(BaseFilter):
     """
     A filter that applies a soft weighting to the augmented predictions.
     """
+
+    def __init__(self, mode: str = SoftFilterMode.PACO, sample: bool = False):
+        self.mode = mode
+        self.sample = sample
+        
 
     def mask(
         self,
@@ -95,19 +100,26 @@ class SoftFilter(BaseFilter):
         """
         Returns a mask based on a hard threshold applied to the augmented predictions.
         """
-        masks = []
-        for augmented_output in augmented_outputs:
-            # pred_o = original_output.get_predictions(propagated=True)
-            # confidence_a = original_output.get_probabilities(propagated=True)[0].max(-1)[0]
-            # mask = confidence_a
-            # mask = confidence_a[torch.arange(confidence_a.shape[0]), pred_o]
-            
-            pred_a = original_output.get_predictions(propagated=True)
-            confidence_o = original_output.get_probabilities(propagated=True)[0].max(-1)[0]
-            mask = confidence_o[torch.arange(confidence_o.shape[0]), pred_a]
-            masks.append(mask)
-        masks = torch.stack(masks, dim=0)
-        return masks
+        return [self.get_mask(original_output, augmented_output) for augmented_output in augmented_outputs]
+
+    def get_mask(self, original_output, augmented_output):
+        pred_o = original_output.get_predictions(propagated=True)
+        confidence_o = original_output.get_probabilities(propagated=True)[0]
+        match self.mode:
+            case SoftFilterMode.PACO:
+                pred_a = augmented_output.get_predictions(propagated=True)
+                mask = confidence_o[torch.arange(confidence_o.shape[0]), pred_a]
+            case SoftFilterMode.POCA:
+                confidence_a = augmented_output.get_probabilities(propagated=True)[0]
+                mask = confidence_a[torch.arange(confidence_a.shape[0]), pred_o]
+            case  SoftFilterMode.PACA:
+                confidence_a = augmented_output.get_probabilities(propagated=True)[0].max(-1)[0]
+                mask = confidence_a
+            case _:
+                mask = None
+        if self.sample:
+            mask = torch.bernoulli(mask)
+        return mask
 
 
 
@@ -160,8 +172,8 @@ class MetricWeightFilter(BaseFilter):
 
 
         return masks
-    
-class FirmFilter(MetricWeightFilter):
+
+class FirmFilter(SoftFilter):
     """
     A filter that applies a soft weighting to the augmented predictions.
     """
@@ -176,41 +188,31 @@ class FirmFilter(MetricWeightFilter):
         Returns a mask based on a hard threshold applied to the augmented predictions.
         """
         masks = []
-        probs_o = original_output.get_probabilities(propagated=True)
 
         for augmented_output in augmented_outputs:
-            probs_a = augmented_output.get_probabilities(propagated=True)
-            # confidence_a = augmented_output.get_probabilities(propagated=True)[0].max(-1)[0]
-            # confidence_o = original_output.get_probabilities(propagated=True)[0].max(-1)[0]
-            # adjusted_confidence_a = 1 + confidence_a - confidence_o
-            metric_score = self.metric(probs_o, probs_a)
+            # PACA = POCA -> weight with augmented pred confidence
+            # PACA        -> weight with original confidence
+            soft_filter = self.get_mask(original_output,augmented_output)
+            
             pred_o = original_output.get_predictions(propagated=True)
             pred_a = augmented_output.get_predictions(propagated=True)
             mask = pred_o == pred_a
-            mask = mask * metric_score
+            mask = mask * soft_filter
             masks.append(mask)
-        masks = torch.stack(masks, dim=0)
-        masks = masks * (1 -  (masks - masks.min(0)[0]) / (masks.max(0)[0] - masks.min(0)[0]))
         return masks
 
 
 class MetricThresholdFilter(BaseFilter):
     """
-    A filter that applies a metric-based threshold to the augmented predictions.
+    A filter that applies a metric divergence threshold to the augmented predictions.
     """
-
-    def __init__(self, threshold: float):
+    def __init__(self, metric_name: str = FilterMetric.BRIER_SCORE, threshold: float = 0.2):
         """
         Args:
-            threshold: The threshold value for filtering.
+            metric: The metric to use for weighting the augmented predictions.
         """
         super().__init__()
-        if not isinstance(threshold, (int, float)):
-            raise ValueError("Threshold must be a numeric value.")
-        if threshold < 0:
-            raise ValueError("Threshold must be non-negative.")
-        if threshold > 1:
-            raise ValueError("Threshold must be in the range [0, 1].")
+        self.metric = get_metric_fn(metric_name)
         self.threshold = threshold
 
     def mask(
@@ -220,13 +222,21 @@ class MetricThresholdFilter(BaseFilter):
         graph: List[Data]
     ) -> torch.Tensor:
         """
-        Returns a mask based on a metric threshold applied to the augmented predictions.
+        Returns a weighting based on a metric applied to the augmented predictions.
         """
-        pred_o = original_output.get_predictions(propagated=True)
-        pred_a = augmented_outputs.get_predictions(propagated=True)
-        
-        # Example metric: absolute difference
-        metric = torch.abs(pred_o - pred_a)
-        
-        mask = metric < self.threshold
-        return mask
+        masks = []
+        probs_o = original_output.get_probabilities(propagated=True)
+        metric_scores = []
+        for augmented_output in augmented_outputs:
+            probs_a = augmented_output.get_probabilities(propagated=True)
+            metric_score = self.metric(probs_o, probs_a)
+            metric_scores.append(metric_score)
+
+        metric_scores = torch.stack(metric_scores, dim=0)
+        metric_mean = metric_scores.mean(dim=0) 
+        # cos_dist = get_metric_fn(FilterMetric.COSINE_SIMILARITY)
+        brier_fn = get_metric_fn(FilterMetric.BRIER_SCORE)
+        metric_dist = brier_fn(metric_mean, metric_scores)
+        metric_dist_norm = (metric_dist - metric_dist.min(0)[0]) / (metric_dist.max(0)[0] - metric_dist.min(0)[0] + 1e-8)
+        masks = (metric_dist_norm < self.threshold)
+        return masks

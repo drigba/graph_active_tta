@@ -2,5 +2,5 @@ defaults:
  - _self_
  - augmentor: graph_space
 
-type_: qes
+type_: bald
 number_of_augmentations: 200

@@ -3,10 +3,10 @@ defaults:
   - hydra: default
   - data: cora_ml
   - model: gcn
-  - acquisition_strategy: aleatoric_propagated
+  - acquisition_strategy: entropy
   - initial_acquisition_strategy: balanced
   - evaluation: standard_no_plots
-  - predictor: eqs  # or eqs, qes
+  - predictor: qes  # or eqs, qes
   - _self_
 
 initial_acquisition_strategy:

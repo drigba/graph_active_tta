@@ -50,6 +50,12 @@ class FilterType:
     METRIC_FILTER = "metric_filter"
     SOFT_FILTER = "soft_filter"
     FIRM_FILTER = "firm_filter"
+    METRIC_THRESHOLD_FILTER = "metric_threshold_filter"
+
+class SoftFilterMode:
+    PACO = "paco"
+    POCA = "poca"
+    PACA = "paca"
 
 @dataclass
 class FilterConfig:
@@ -69,11 +75,17 @@ class MetricFilterConfig(FilterConfig):
     metric: str = MISSING
 
 @dataclass
-class SoftFilterConfig(FilterConfig):
-    type_: str = FilterType.SOFT_FILTER
+class MetricThresholdFilter(MetricFilterConfig):
+    type_: str = FilterType.METRIC_THRESHOLD_FILTER
+    threshold: float = 0.2
 
 @dataclass
-class FirmFilterConfig(MetricFilterConfig):
+class SoftFilterConfig(FilterConfig):
+    type_: str = FilterType.SOFT_FILTER
+    mode: str = SoftFilterMode.POCA  # Default mode
+
+@dataclass
+class FirmFilterConfig(SoftFilterConfig):
     type_: str = FilterType.FIRM_FILTER
 
 @dataclass
@@ -98,6 +110,7 @@ cs.store(name="hard_filter", node=HardFilterConfig, group="predictor/augmentor/f
 cs.store(name="metric_filter", node=MetricFilterConfig, group="predictor/augmentor/filter")
 cs.store(name="soft_filter", node=SoftFilterConfig, group="predictor/augmentor/filter")
 cs.store(name="firm_filter", node=FirmFilterConfig, group="predictor/augmentor/filter")
+cs.store(name="metric_threshold_filter", node=MetricThresholdFilter, group="predictor/augmentor/filter")
 
 cs = ConfigStore.instance()
 cs.store(name="base", node=AugmentationConfig, group="predictor/augmentor/augmentation")

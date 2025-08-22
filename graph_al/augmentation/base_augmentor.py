@@ -60,6 +60,7 @@ class GraphSpaceAugmentor(BaseAugmentor):
         """
         # Example augmentation logic
         graph_tmp = deepcopy(graph)
+        # graph_tmp = graph
         graph_tmp = graph_tmp.to(graph.x.device)
         graph_tmp = self.augmentation_function(graph_tmp)
         return self.model.predict(graph_tmp, acquisition=True), graph_tmp

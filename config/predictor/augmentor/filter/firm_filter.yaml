@@ -1,2 +1,2 @@
 type_ : firm_filter
-metric: brier_score  # or brier_score, absolute_difference
+mode: poca  # paco, poca, paca
