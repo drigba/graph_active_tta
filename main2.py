@@ -24,7 +24,7 @@ from graph_al.utils.wandb import wandb_get_metrics_dir
 from graph_al.active_learning import initial_acquisition, train_model
 from graph_al.acquisition.base import mask_not_in_val
 from graph_al.data.enum import DatasetSplit
-from graph_al.predictor.base_predictor import NormalPredictor
+from graph_al.predictor.base_predictor import NormalPredictor, InitialPredictor
 
 import wandb
 import tqdm
@@ -143,6 +143,7 @@ def main(config_dict: DictConfig) -> None:
                 acquisition_strategy, initial_acquisition_strategy
             ),
         )
+        
         for init_idx in range(config.model.num_inits):
             get_logger().info(
                 f"Dataset split {split_idx}, Model initialization {init_idx}"
@@ -161,7 +162,7 @@ def main(config_dict: DictConfig) -> None:
                 acquisition_strategy=acquisition_strategy,
                 generator=generator,
             )
-            initial_predictor = NormalPredictor(model, device, initial_acquisition_strategy, generator)
+            initial_predictor = InitialPredictor(model, device, initial_acquisition_strategy, generator)
 
             acquisition_step = 0
             acquisition_results = []

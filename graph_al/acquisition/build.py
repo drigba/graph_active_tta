@@ -50,7 +50,7 @@ from graph_al.acquisition.latent_distance import AcquisitionStrategyLatentDistan
 from graph_al.acquisition.adaptation_risk import AcquisitionStrategyAdaptationRisk
 from graph_al.acquisition.adaptation import AcquisitionStrategyAdaptation
 from graph_al.acquisition.educated_random import AcquisitionStrategyEducatedRandom
-from graph_al.acquisition.geem_attribute import AcquisitionStrategyGEEMAttribute
+from graph_al.acquisition.geem import AcquisitionStrategyGEEMAttribute
 from graph_al.acquisition.tta_expected_score import AcquisitionStrategyTTAExpectedQueryScore
 
 import torch

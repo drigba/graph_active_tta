@@ -1,10 +1,11 @@
 from copy import deepcopy
-from graph_al.acquisition.config import AcquisitionStrategyGEEMConfig
+from graph_al.acquisition.config import AcquisitionStrategyGEEMAttributeConfig, AcquisitionStrategyGEEMConfig
 from graph_al.data.base import Data, Dataset
 from graph_al.data.config import DatasetSplit
 from graph_al.model.base import BaseModel
 from graph_al.model.prediction import Prediction
 from graph_al.acquisition.base import BaseAcquisitionStrategy
+from graph_al.acquisition.attribute import AcquisitionStrategyByAttribute
 from graph_al.model.config import ModelConfig
 
 from jaxtyping import Shaped, jaxtyped, Bool
@@ -126,3 +127,25 @@ def compute_risk_job(jobs: List[Tuple[Tuple[int, int], int]], model: BaseModel, 
 
 
 
+class AcquisitionStrategyGEEMAttribute(AcquisitionStrategyByAttribute):
+    
+    """ Acquisition strategy that uses expected error minimization on graphs [1] to acquire a node. 
+    
+    References:
+    [1]: https://arxiv.org/pdf/2007.05003.pdf
+    """
+    
+    def __init__(self, config: AcquisitionStrategyGEEMAttributeConfig):
+        super().__init__(config)
+        assert not self.balanced, f'GEEM does not support balanced acquisition currently'
+        self.geem = AcquisitionStrategyGraphExpectedErrorMinimization(config)
+        
+
+    def get_attribute(self, prediction: Prediction | None, model: BaseModel, dataset: Dataset, generator: torch.Generator,
+                        model_config: ModelConfig) -> Tensor:
+        mask_acquired = dataset.data.get_mask(DatasetSplit.TRAIN)
+        _, weight_dict = self.geem.acquire_one(mask_acquired, prediction, model, dataset, model_config, generator)
+        risk, probabilities = weight_dict['risk'], weight_dict['probabilities']
+        final_weight = (risk * probabilities).sum(1)
+
+        return final_weight

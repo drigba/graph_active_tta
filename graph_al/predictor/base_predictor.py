@@ -95,8 +95,19 @@ class NormalPredictor(BasePredictor):
 
         return prediction, acquired_idxs, acquisition_metrics
 
-
-
+class InitialPredictor(BasePredictor):
+    
+    def predict(self, dataset, acquisition_step):
+        prediction = Prediction()
+        acquired_idxs, acquisition_metrics = self.acquisition_strategy.acquire(
+                model=self.model,
+                dataset=dataset,
+                prediction=prediction,
+                num=1,
+                model_config=self.model.config,
+                generator=self.generator,
+            )
+        return prediction, acquired_idxs, acquisition_metrics
 
 
 
