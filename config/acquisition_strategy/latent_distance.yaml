@@ -1,5 +1,0 @@
-defaults:
-  - base_latent_distance
-
-name: latent_distance
-higher_is_better: false 

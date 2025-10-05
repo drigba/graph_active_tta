@@ -8,8 +8,6 @@ class PredictorType:
     NORMAL = "normal"
     EQS = "eqs"
     QES = "qes"
-    EQS_RECURSIVE = "eqs_recursive"
-    BALD = "bald"
 
 @dataclass
 class PredictorConfig:
@@ -29,20 +27,9 @@ class EQSPredictorConfig(PredictorConfig):
 class QESPredictorConfig(EQSPredictorConfig):
     type_: str = PredictorType.QES
     
-@dataclass
-class EQSRecursivePredictorConfig(EQSPredictorConfig):
-    type_: str = PredictorType.EQS_RECURSIVE
-    outer_loops: int = 1
-    metric_name: str = "brier_score"
-    
-@dataclass
-class BALDPredictorConfig(EQSPredictorConfig):
-    type_: str = PredictorType.BALD
 
 cs = ConfigStore.instance()
 cs.store(name="base", node=PredictorConfig, group="predictor")
 cs.store(name="normal", node=NormalPredictorConfig, group="predictor")
 cs.store(name="eqs", node=EQSPredictorConfig, group="predictor")
 cs.store(name="qes", node=QESPredictorConfig, group="predictor")
-cs.store(name="eqs_recursive", node=EQSRecursivePredictorConfig, group="predictor")
-cs.store(name="bald", node=BALDPredictorConfig, group="predictor")

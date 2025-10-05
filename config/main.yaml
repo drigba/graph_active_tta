@@ -16,8 +16,7 @@ initial_acquisition_strategy:
 acquisition_strategy:
   num_steps: ${eval:${data.num_classes} * 5 - \(${initial_acquisition_strategy.num_steps} * ${initial_acquisition_strategy.num_to_acquire_per_step}\)}
   num_to_acquire_per_step: 1
-  tta: {}
-  adaptation: {}
+
 
 
 

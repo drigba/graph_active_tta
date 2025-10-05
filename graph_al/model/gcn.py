@@ -54,10 +54,6 @@ class GCN(BaseModelMonteCarloDropout):
             if edge_index is None:
                 x = layer.lin(x) # type: ignore
             else:   
-                # print(f"edge_index: {edge_index.device}")
-                # if edge_weight is not None:
-                #     print(f"edge_weight: {edge_weight.device}")
-                # print(f"x: {x.device}")
                 x = layer(x, edge_index, edge_weight)
             if acquisition and _layer_idx == len(self.layers) - 2: # only return an embedding when doing acquisition
                 embedding = x
@@ -86,7 +82,6 @@ class GCN(BaseModelMonteCarloDropout):
             embeddings_unpropagated, logits_unpropagated = None, None
         return embeddings, embeddings_unpropagated, logits, logits_unpropagated
     
-    # IDE KÉNE TTA-T BETENNI
     @typechecked
     def predict_multiple_collate(self, batch: Data, num_samples: int, acquisition: bool = False) -> Prediction:
         """ Predicts multiple samples at once by collating into one large batch """

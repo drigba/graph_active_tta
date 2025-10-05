@@ -1,5 +1,5 @@
 from graph_al.acquisition.base import BaseAcquisitionStrategy
-from graph_al.acquisition.config import AcquisitionStrategyAGEConfig, AcquisitionStrategyAGELikeConfig
+from graph_al.acquisition.config import AcquisitionStrategyAGEConfig, AcquisitionStrategyAGELikeConfig, AcquisitionStrategyAGEAttributeConfig
 from graph_al.data.base import BaseDataset, Dataset
 from graph_al.model.base import BaseModel
 from graph_al.model.prediction import Prediction
@@ -13,6 +13,8 @@ import torch
 from torch_geometric.utils import to_dense_adj
 import numpy as np
 import networkx as nx
+from graph_al.data.config import DatasetSplit
+from graph_al.acquisition.attribute import AcquisitionStrategyByAttribute
 
 from graph_al.model.config import ModelConfig
 
@@ -148,4 +150,30 @@ class AcquisitionStrategyAGE(AcquisitionStrategyAGELike):
             sampled_idx = torch.tensor(range(len(mask_train_pool)))[mask_train_pool.cpu()][final_weight.cpu().argmax()]
 
         return int(sampled_idx.item()), {'mask_train' : mask_train, 'mask_train_pool' : mask_train_pool,
-            'representativeness' : representativeness, 'entropy' : entropy, 'centrality' : centrality}
+            'representativeness' : representativeness, 'entropy' : entropy, 'centrality' : centrality, 'final_weight': final_weight}
+
+
+class AcquisitionStrategyAGEAttribute(AcquisitionStrategyByAttribute):
+    """ Strategy that uses a mix of uncertainty and representativeness.
+     
+     
+    References:
+    [1] : https://arxiv.org/abs/1705.05085
+    """
+    def __init__(self, config: AcquisitionStrategyAGEAttributeConfig):
+        super().__init__(config)
+        self.basef = config.basef
+        self.age = AcquisitionStrategyAGE(config)
+    
+        
+    @torch.no_grad()
+    def get_attribute(self, prediction: Prediction | None, model: BaseModel, dataset: Dataset, generator: torch.Generator,
+                        model_config: ModelConfig) -> Tensor:
+        mask_acquired = dataset.data.get_mask(DatasetSplit.TRAIN)
+        prediction.logits = prediction.logits.to(mask_acquired.device)
+        _, weight_dict = self.age.acquire_one(mask_acquired, prediction, model, dataset, model_config, generator)
+        final_weight = weight_dict['final_weight']
+        proxy = torch.zeros(dataset.num_nodes, device=dataset.data.x.device)     
+        mask_predict = dataset.data.get_mask(DatasetSplit.TRAIN_POOL)           
+        proxy[mask_predict] = final_weight
+        return proxy

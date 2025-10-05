@@ -1,5 +1,0 @@
-defaults:
-  - base_adaptation_risk
-
-name: adaptation_risk
-higher_is_better: false 

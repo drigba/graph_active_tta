@@ -9,7 +9,6 @@ from graph_al.model.config import ModelConfig
 from graph_al.acquisition.config import AcquisitionStrategyConfig
 from graph_al.evaluation.config import EvaluationConfig, MetricTemplate
 from graph_al.evaluation.enum import DatasetSplit, MetricName
-from graph_al.augmentation.config import AugmentationConfig, AugmentorConfig, FilterConfig
 from graph_al.predictor.config import PredictorConfig
 
 @dataclass

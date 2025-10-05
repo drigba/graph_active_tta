@@ -1,5 +1,0 @@
-defaults:
-  - base_augmentation_risk
-
-name: augmentation_risk
-higher_is_better: false 

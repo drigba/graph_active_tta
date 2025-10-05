@@ -62,25 +62,26 @@ class QESPredictor(EQSPredictor):
             orig_score = self.acquisition_strategy.get_attribute(
                 prediction, self.model, dataset, self.generator, self.model.config
             )
-            augmented_predictions = []
             augmented_graphs = []
+            masks = []
             augmented_attributes = []
             for _ in range(self.number_of_augmentations):
                 p_tmp, data_clone = self.augmentor(data)
-                augmented_predictions.append(p_tmp)
-                # augmented_graphs.append(data_clone)
                 dataset.data = data_clone
                 acquisition_attribute = self.acquisition_strategy.get_attribute(
                     p_tmp, self.model, dataset, self.generator, self.model.config
                 )
-                augmented_attributes.append(acquisition_attribute)
                 dataset.data = data
 
-        masks = self.augmentor.filter_function(
-            original_output=prediction,
-            augmented_outputs=augmented_predictions,
-            graph=augmented_graphs,
-        )
+                mask = self.augmentor.filter_function(
+                    original_output=prediction,
+                    augmented_output=p_tmp,
+                    graph=augmented_graphs,
+                )
+                masks.append(mask)
+                augmented_attributes.append(acquisition_attribute)
+        
+        masks = torch.vstack(masks).float()
         augmented_attributes = torch.vstack(augmented_attributes)
         query_metric = augmented_attributes * masks
         query_metric = query_metric / (masks.sum(dim=0) + 1)

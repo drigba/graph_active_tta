@@ -67,22 +67,19 @@ class EQSPredictor(BasePredictor):
         data_o = deepcopy(data)
 
         with torch.no_grad():
-            cpu = torch.device("cpu")
-            prediction = self.model.predict(data, acquisition=True).to(cpu)
-            augmented_predictions = []
+            prediction = self.model.predict(data, acquisition=True)
             augmented_graphs = []
-            for i in range(self.number_of_augmentations):
-                p_tmp, data_clone = self.augmentor(data)
-                augmented_predictions.append(p_tmp.to(cpu))
-                # augmented_graphs.append(data_clone)
-            masks = self.augmentor.filter_function(
-                original_output=prediction,
-                augmented_outputs=augmented_predictions,
-                graph=augmented_graphs,
-            )
-
-            prediction.add_predictions_multiple(augmented_predictions, masks)
-
+            masks = []
+            for _ in range(self.number_of_augmentations):
+                p_tmp, _ = self.augmentor(data)
+                mask = self.augmentor.filter_function(
+                    original_output=prediction,
+                    augmented_output=p_tmp,
+                    graph=augmented_graphs,
+                )
+                prediction.add_prediction(p_tmp, mask)
+                masks.append(mask)
+            masks = torch.stack(masks, dim=0)
             prediction_normalizer = 1 / (masks.sum(dim=0) + 1)
             prediction.multiply_prediction(prediction_normalizer)
 

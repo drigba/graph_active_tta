@@ -1,0 +1,7 @@
+defaults:
+  - base_age_attribute
+
+name: base_age_attribute
+basef: 0.995
+num_clusters: 6
+higher_is_better: true

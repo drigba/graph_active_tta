@@ -1,5 +1,0 @@
-defaults:
-  - base_educated_random
-
-name: educated_random
-higher_is_better: false 

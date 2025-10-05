@@ -11,16 +11,9 @@ from graph_al.acquisition.config import (
     AcquisitionStrategyApproximateUncertaintyConfig,
     AcquisitionStrategyGalaxyConfig,
     AcquisitionStrategyBadgeConfig,
-    AcquisitionStrategyLeaveOutConfig,
-    AcquisitionStrategyAugmentationRiskConfig,
-    AcquisitionStrategyAugmentLatentConfig,
-    AcquisitionStrategyLatentDistanceConfig,
-    AcquisitionStrategyAdaptationRiskConfig,
-    AcquisitionStrategyAdaptationConfig,
-    AcquisitionStrategyEducatedRandomConfig,
     AcquisitionStrategyExpectedQueryConfig,
     AcquisitionStrategyGEEMAttributeConfig,
-    AcquisitionStrategyTTAExpectedQueryScoreConfig
+    AcquisitionStrategyAGEAttributeConfig
     
 )
 from graph_al.acquisition.prediction_attribute import AcquisitionStrategyByPredictionAttribute
@@ -31,7 +24,7 @@ from graph_al.acquisition.best_split import AcquisitionStrategyBestSplit, Acquis
 from graph_al.acquisition.oracle import AcquisitionStrategyOracle
 from graph_al.acquisition.fixed_sequence import AcquisitionStrategyFixedSequence
 from graph_al.acquisition.data_attribute import AcquisitionStrategyByDataAttribute, AcquisitionStrategyByAPPR
-from graph_al.acquisition.age import AcquisitionStrategyAGE
+from graph_al.acquisition.age import AcquisitionStrategyAGE, AcquisitionStrategyAGEAttribute
 from graph_al.acquisition.geem import AcquisitionStrategyGraphExpectedErrorMinimization
 from graph_al.acquisition.anrmab import AcquisitionStrategyANRMAB
 from graph_al.acquisition.feat_prop import AcquisitonStrategyFeatProp
@@ -42,18 +35,8 @@ from graph_al.acquisition.badge import AcquisitionStrategyBadge
 from graph_al.model.base import BaseModel
 from graph_al.data.base import Dataset
 from graph_al.acquisition.galaxy import AcquisitionStrategyGalaxy
-from graph_al.acquisition.leave_out import AcquisitionStrategyLeaveOut
-from graph_al.acquisition.augmentation_risk import AcquisitionStrategyAugmentationRisk
-from graph_al.acquisition.expected_query import AcquisitionStrategyExpectedQuery
-from graph_al.acquisition.augment_latent import AcquisitionStrategyAugmentLatent
-from graph_al.acquisition.latent_distance import AcquisitionStrategyLatentDistance
-from graph_al.acquisition.adaptation_risk import AcquisitionStrategyAdaptationRisk
-from graph_al.acquisition.adaptation import AcquisitionStrategyAdaptation
-from graph_al.acquisition.educated_random import AcquisitionStrategyEducatedRandom
 from graph_al.acquisition.geem import AcquisitionStrategyGEEMAttribute
-from graph_al.acquisition.tta_expected_score import AcquisitionStrategyTTAExpectedQueryScore
 
-import torch
 
 def get_acquisition_strategy(config: AcquisitionStrategyConfig, dataset: Dataset) -> BaseAcquisitionStrategy:
     match config.type_:
@@ -83,6 +66,8 @@ def get_acquisition_strategy(config: AcquisitionStrategyConfig, dataset: Dataset
             return AcquisitionStrategyAGE(config) # type: ignore
         case AcquisitionStrategyGEEMConfig.type_:
             return AcquisitionStrategyGraphExpectedErrorMinimization(config) # type: ignore
+        case AcquisitionStrategyAGEAttributeConfig.type_:
+            return AcquisitionStrategyAGEAttribute(config) # type: ignore
         case AcquisitionStrategyANRMABConfig.type_:
             return AcquisitionStrategyANRMAB(config, dataset.num_nodes) # type: ignore
         case AcquisitionStrategyBestOrderedSplitConfig.type_:
@@ -99,25 +84,9 @@ def get_acquisition_strategy(config: AcquisitionStrategyConfig, dataset: Dataset
             return AcquisitionStrategyGalaxy(config) # type: ignore
         case AcquisitionStrategyBadgeConfig.type_:
             return AcquisitionStrategyBadge(config) # type: ignore
-        case AcquisitionStrategyLeaveOutConfig.type_:
-            return AcquisitionStrategyLeaveOut(config) # type: ignore
-        case AcquisitionStrategyAugmentationRiskConfig.type_:
-            return AcquisitionStrategyAugmentationRisk(config) # type: ignore
-        case AcquisitionStrategyAugmentLatentConfig.type_:
-            return AcquisitionStrategyAugmentLatent(config) # type: ignore
-        case AcquisitionStrategyLatentDistanceConfig.type_:
-            return AcquisitionStrategyLatentDistance(config) # type: ignore
-        case AcquisitionStrategyAdaptationRiskConfig.type_:
-            return AcquisitionStrategyAdaptationRisk(config) # type: ignore
-        case AcquisitionStrategyAdaptationConfig.type_:
-            return AcquisitionStrategyAdaptation(config) # type: ignore
-        case AcquisitionStrategyEducatedRandomConfig.type_:
-            return AcquisitionStrategyEducatedRandom(config) # type: ignore
         case AcquisitionStrategyExpectedQueryConfig.type_:
             return AcquisitionStrategyExpectedQuery(config) # type: ignore
         case AcquisitionStrategyGEEMAttributeConfig.type_:
             return AcquisitionStrategyGEEMAttribute(config)
-        case AcquisitionStrategyTTAExpectedQueryScoreConfig.type_:
-            return AcquisitionStrategyTTAExpectedQueryScore(config)
         case _:
             raise ValueError(f'Unsupported acquisition strategy {config.type_}')

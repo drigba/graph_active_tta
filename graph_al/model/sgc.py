@@ -73,9 +73,9 @@ class SGC(BaseModel):
                 raise RuntimeError(f'No regression model was fitted for SGC')
             try:
                 x = self.get_diffused_node_features(batch, cache=self.cached)
-                if acquisition:
+                if acquisition and batch.x.device == torch.device('cuda'):
                     x = x.cuda()
-                    batch.x = batch.x.cuda()
+                    
                 probs = self.predict_proba(x)
                 probs_unpropagated = self.predict_proba(batch.x)
                 logits = self.decision_function(x)
@@ -93,8 +93,8 @@ class SGC(BaseModel):
                           embeddings=logits.unsqueeze(0),
                           embeddings_unpropagated=logits_unpropagated.unsqueeze(0),
                           )
-    
-    def set_model(self):
+
+    def set_model(self, device: torch.device):
         """ Sets the model to be used for predictions. """
         if self.model_set:
             return
@@ -102,18 +102,18 @@ class SGC(BaseModel):
         with torch.no_grad():
             self.model.linear.weight.copy_(torch.tensor(self.logistic_regression.coef_).float())
             self.model.linear.bias.copy_(torch.tensor(self.logistic_regression.intercept_).float())
-        self.model =  self.model.cuda()
+        self.model =  self.model.to(device)
         self.model_set = True
     
-    def predict_proba(self, batch: Data) -> Prediction: 
-        self.set_model()
+    def predict_proba(self, batch: torch.Tensor) -> Prediction: 
+        self.set_model(batch.device)
         self.model.eval()
         with torch.no_grad():
             logits, probs = self.model(batch)
         return probs
     
-    def decision_function(self, batch: Data) -> Prediction:
-        self.set_model()
+    def decision_function(self, batch: torch.Tensor) -> Prediction:
+        self.set_model(batch.device)
         self.model.eval()
         with torch.no_grad():
             logits, probs = self.model(batch)

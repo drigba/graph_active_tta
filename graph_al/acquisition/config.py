@@ -5,8 +5,6 @@ from graph_al.evaluation.config import MetricTemplate
 from graph_al.model.prediction import PredictionAttribute
 from graph_al.acquisition.enum import *
 from graph_al.evaluation.enum import DatasetSplit, MetricName
-from graph_al.acquisition.config_tta import TTAConfig
-from graph_al.test_time_adaptation.config import  AdaptationConfig
 from typing import List
 
 
@@ -21,14 +19,8 @@ class AcquisitionStrategyConfig:
     requires_model_prediction: bool = True
     balanced: bool = False # whether to select randomly but keep the class distribution balanced
     name: str | None = None
-    scale: float | None = 1.0
-    tta: TTAConfig | None = None
-    tta_enabled: bool | None = None
-    adaptation: AdaptationConfig | None = None
-    adaptation_enabled: bool | None = None
 
 
-    
 @dataclass
 class AcquisitionStrategyByAttributeConfig(AcquisitionStrategyConfig):
     """ Base config for strategies that use an attribute defined over all nodes. """
@@ -155,73 +147,13 @@ class AcquisitionStrategyApproximateUncertaintyConfig(AcquisitionStrategyByAttri
     compute_as_ratio: bool = False # if True, it is computed as conf(alea) / conf(total), if False, we optimize the ratio of observing the remaining expected ground-truth
     features_only: bool = False # if True, only use the features for the uncertainty estimation
 
-@dataclass
-class AcquisitionStrategyLeaveOutConfig(AcquisitionStrategyByAttributeConfig):
-    type_: AcquisitionStrategyType = AcquisitionStrategyType.LEAVE_OUT
-    higher_is_better: bool = True 
-    
-@dataclass
-class AcquisitionStrategyAugmentationRiskConfig(AcquisitionStrategyByAttributeConfig):
-    type_: AcquisitionStrategyType = AcquisitionStrategyType.AUGMENTATION_RISK
-    higher_is_better: bool = False 
     
 @dataclass
 class AcquisitionStrategyExpectedQueryConfig(AcquisitionStrategyByAttributeConfig):
     type_: AcquisitionStrategyType = AcquisitionStrategyType.EXPECTED_QUERY
     higher_is_better: bool = False 
     
-@dataclass
-class AcquisitionStrategyAdaptationRiskConfig(AcquisitionStrategyByAttributeConfig):
-    type_: AcquisitionStrategyType = AcquisitionStrategyType.ADAPTATION_RISK
-    higher_is_better: bool = False
-    lr_feat: float = 0.0005 # learning rate for feature adaptation
-    lr_adj: float = 0.1 # learning rate for structure adaptation
-    epochs: int = 20 # number of epochs for feature adaptation
-    strategy: str = AdaptationStrategy.DROPEDGE # strategy for augmenting the graph
-    margin: float = -1 # margin for the loss function
-    ratio: float = 0.1 # budget for changing the graph structure
-    existing_space: bool = True # whether to enable removing edges from the graph
-    loop_adj: int = 1 # number of loops for optimizing structure
-    loop_feat: int = 4 # number of loops for optimizing features
-    debug:int = 0 # debug flag
 
-@dataclass
-class AcquisitionStrategyAdaptationConfig(AcquisitionStrategyAdaptationRiskConfig):
-    type_: AcquisitionStrategyType = AcquisitionStrategyType.ADAPTATION
-
-@dataclass
-class AcquisitionStrategyEducatedRandomConfig(AcquisitionStrategyAdaptationRiskConfig):
-    type_: AcquisitionStrategyType = AcquisitionStrategyType.EDUCATED_RANDOM
-    top_percent: float = 70
-    low_percent: float = 1
-    embedded_strategy: AcquisitionStrategyConfig = field(default_factory=AcquisitionStrategyConfig)
-
-@dataclass
-class AcquisitionStrategyTTAExpectedQueryScoreConfig(AcquisitionStrategyAdaptationRiskConfig):
-    type_: AcquisitionStrategyType = AcquisitionStrategyType.TTA_EXPECTED_QUERY_SCORE
-    embedded_strategy: AcquisitionStrategyConfig = field(default_factory=AcquisitionStrategyConfig)
-    strat_node: str | None = NodeAugmentation.NOISE # which node augmentation strategy to use
-    strat_edge: str | None = EdgeAugmentation.MASK # which edge augmentation strategy to use
-    norm: bool | None = True
-    num: int = 100 # number of tta samples
-    filter: bool = False # whether to filter the tta 
-    p_edge: float = 0.3 # probability of edge dropout
-    p_node: float = 0.3
-    higher_is_better: bool = False
-    
-@dataclass
-class AcquisitionStrategyLatentDistanceConfig(AcquisitionStrategyByAttributeConfig):
-    type_: AcquisitionStrategyType = AcquisitionStrategyType.LATENT_DISTANCE
-    higher_is_better: bool = False 
-    
-@dataclass
-class AcquisitionStrategyAugmentLatentConfig(AcquisitionStrategyConfig):
-    """ Configuration for acquiring based on the latent space of the model. """
-    type_: AcquisitionStrategyType = AcquisitionStrategyType.AUGMENT_LATENT
-    num: int = 100
-    p: float = 0.1
-    higher_is_better: bool = False
-    filter: bool = True # whether to filter the augmentations based on the prediction
 
 @dataclass
 class AcquisitionStrategyAGELikeConfig(AcquisitionStrategyConfig):
@@ -276,6 +208,16 @@ class AcquisitionStrategyBadgeConfig(AcquisitionStrategyConfig):
     type_: AcquisitionStrategyType = AcquisitionStrategyType.BADGE
     requires_model_prediction: bool = True
 
+
+@dataclass
+class AcquisitionStrategyAGEAttributeConfig(AcquisitionStrategyAGELikeConfig):
+    """ Configuration for acquiring based on AGE, i.e. centrality, entropy and representativeness"""
+    type_: AcquisitionStrategyType = AcquisitionStrategyType.AGE_ATTRIBUTE
+    basef: float = 0.995
+    higher_is_better: bool = True # whether a higher value of the attribute is better for acquisition
+    
+
+
 cs = ConfigStore.instance()
 cs.store(name="base_config", node=AcquisitionStrategyConfig, group='acquisition_strategy')
 cs.store(name="acquire_by_prediction_attribute", node=AcquireByPredictionAttributeConfig, group='acquisition_strategy')
@@ -298,16 +240,9 @@ cs.store(name="base_uncertainty_difference", node=AcquisitionStrategyUncertainty
 cs.store(name="base_approximate_uncertainty", node=AcquisitionStrategyApproximateUncertaintyConfig, group='acquisition_strategy')
 cs.store(name="base_galaxy", node=AcquisitionStrategyGalaxyConfig, group='acquisition_strategy')
 cs.store(name="base_badge", node=AcquisitionStrategyBadgeConfig, group='acquisition_strategy')
-cs.store(name="base_leave_out", node=AcquisitionStrategyLeaveOutConfig, group='acquisition_strategy')
-cs.store(name="base_augmentation_risk", node=AcquisitionStrategyAugmentationRiskConfig, group='acquisition_strategy')
-cs.store(name="base_augment_latent", node=AcquisitionStrategyAugmentLatentConfig, group='acquisition_strategy')
-cs.store(name="base_latent_distance", node=AcquisitionStrategyLatentDistanceConfig, group='acquisition_strategy')
-cs.store(name="base_adaptation_risk", node=AcquisitionStrategyAdaptationRiskConfig, group='acquisition_strategy')
-cs.store(name="base_adaptation", node=AcquisitionStrategyAdaptationConfig, group='acquisition_strategy')
-cs.store(name="base_educated_random", node=AcquisitionStrategyEducatedRandomConfig, group='acquisition_strategy')
-cs.store(name="base_expected_query", node=AcquisitionStrategyExpectedQueryConfig, group='acquisition_strategy')
+ócs.store(name="base_expected_query", node=AcquisitionStrategyExpectedQueryConfig, group='acquisition_strategy')
 cs.store(name="base_geem_attribute", node=AcquisitionStrategyGEEMAttributeConfig, group='acquisition_strategy')
-cs.store(name="base_tta_expected_query_score", node=AcquisitionStrategyTTAExpectedQueryScoreConfig, group='acquisition_strategy')
+cs.store(name="base_age_attribute", node=AcquisitionStrategyAGEAttributeConfig, group='acquisition_strategy')
 
 # register to all initial acquisition strategy groups as well
 cs.store(name="base_config", node=AcquisitionStrategyConfig, group='initial_acquisition_strategy')
@@ -331,9 +266,4 @@ cs.store(name="base_uncertainty_difference", node=AcquisitionStrategyUncertainty
 cs.store(name="base_approximate_uncertainty", node=AcquisitionStrategyApproximateUncertaintyConfig, group='initial_acquisition_strategy')
 cs.store(name="base_galaxy", node=AcquisitionStrategyGalaxyConfig, group='initial_acquisition_strategy')
 cs.store(name="base_badge", node=AcquisitionStrategyBadgeConfig, group='initial_acquisition_strategy')
-
-
-cs.store(name="base_geem", node=AcquisitionStrategyGEEMConfig, group='acquisition_strategy.embedded_strategy')
-cs.store(name="base_geem_attribute", node=AcquisitionStrategyGEEMAttributeConfig, group='acquisition_strategy.embedded_strategy')
-cs.store(name="acquire_by_prediction_attribute", node=AcquireByPredictionAttributeConfig, group='acquisition_strategy.embedded_strategy')
-cs.store(name="entropy", node=AcquireByPredictionAttributeConfig, group='acquisition_strategy.embedded_strategy')
+cs.store(name="age_attribute", node=AcquisitionStrategyAGEAttributeConfig, group='acquisition_strategy.embedded_strategy')

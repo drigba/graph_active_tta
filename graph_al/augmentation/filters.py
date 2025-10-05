@@ -39,11 +39,11 @@ class BaseFilter:
     def __call__(
         self,
         original_output: Prediction,
-        augmented_outputs: List[Prediction],
+        augmented_output: Prediction,
         graph: List[Data]
     ) -> torch.Tensor:
-        return torch.vstack(self.mask(original_output, augmented_outputs, graph))
-    
+        return self.mask(original_output, augmented_output, graph)
+
 class NoFilter(BaseFilter):
     """
     A filter that does not apply any filtering.
@@ -51,13 +51,13 @@ class NoFilter(BaseFilter):
     def mask(
         self,
         original_output: Prediction,
-        augmented_outputs: List[Prediction],
+        augmented_output: Prediction,
         graph: List[Data]
     ) -> torch.Tensor:
         """
         Returns a mask that keeps all nodes/edges in the graph.
         """
-        return [torch.ones(original_output.probabilities.shape[1], dtype=torch.bool).to(original_output.probabilities.device) for _ in augmented_outputs]
+        return torch.ones(original_output.probabilities.shape[1], dtype=torch.bool).to(original_output.probabilities.device)
 
 class HardFilter(BaseFilter):
     """
@@ -67,19 +67,16 @@ class HardFilter(BaseFilter):
     def mask(
         self,
         original_output: Prediction,
-        augmented_outputs: List[Prediction],
+        augmented_output: Prediction,
         graph: List[Data]
     ) -> torch.Tensor:
         """
         Returns a mask based on a hard threshold applied to the augmented predictions.
         """
-        masks = []
         pred_o = original_output.get_predictions(propagated=True)
-        for augmented_output in augmented_outputs:
-            pred_a = augmented_output.get_predictions(propagated=True)
-            mask = pred_o == pred_a
-            masks.append(mask)
-        return masks
+        pred_a = augmented_output.get_predictions(propagated=True)
+        mask = pred_o == pred_a
+        return mask
 
 class SoftFilter(BaseFilter):
     """
@@ -181,25 +178,23 @@ class FirmFilter(SoftFilter):
     def mask(
         self,
         original_output: Prediction,
-        augmented_outputs: List[Prediction],
+        augmented_output: Prediction,
         graph: List[Data]
     ) -> torch.Tensor:
         """
         Returns a mask based on a hard threshold applied to the augmented predictions.
         """
-        masks = []
 
-        for augmented_output in augmented_outputs:
-            # PACA = POCA -> weight with augmented pred confidence
-            # PACA        -> weight with original confidence
-            soft_filter = self.get_mask(original_output,augmented_output)
-            
-            pred_o = original_output.get_predictions(propagated=True)
-            pred_a = augmented_output.get_predictions(propagated=True)
-            mask = pred_o == pred_a
-            mask = mask * soft_filter
-            masks.append(mask)
-        return masks
+        
+        # PACA = POCA -> weight with augmented pred confidence
+        # PACA        -> weight with original confidence
+        soft_filter = self.get_mask(original_output,augmented_output)
+        
+        pred_o = original_output.get_predictions(propagated=True)
+        pred_a = augmented_output.get_predictions(propagated=True)
+        mask = pred_o == pred_a
+        mask = mask * soft_filter
+        return mask
 
 
 class MetricThresholdFilter(BaseFilter):
