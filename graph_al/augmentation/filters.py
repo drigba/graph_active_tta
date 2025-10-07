@@ -135,41 +135,6 @@ def get_metric_fn(metric: FilterMetric) -> BaseFilter:
 
 
 
-class MetricWeightFilter(BaseFilter):
-    """
-    A filter that applies a metric divergence threshold to the augmented predictions.
-    """
-    def __init__(self, metric_name: str = "hard"):
-        """
-        Args:
-            metric: The metric to use for weighting the augmented predictions.
-        """
-        super().__init__()
-        self.metric = get_metric_fn(metric_name)
-
-    def mask(
-        self,
-        original_output: Prediction,
-        augmented_outputs: List[Prediction],
-        graph: List[Data]
-    ) -> torch.Tensor:
-        """
-        Returns a weighting based on a metric applied to the augmented predictions.
-        """
-        masks = []
-        probs_o = original_output.get_probabilities(propagated=True)
-        for augmented_output in augmented_outputs:
-            probs_a = augmented_output.get_probabilities(propagated=True)
-            metric_score = self.metric(probs_o, probs_a)
-            # Normalize the metric score to [0, 1]
-            # Create a mask where the normalized score is below a threshold (e
-            masks.append(metric_score)
-        masks = torch.stack(masks, dim=0)
-        masks = 1 -  (masks - masks.min(0)[0]) / (masks.max(0)[0] - masks.min(0)[0])
-
-
-        return masks
-
 class FirmFilter(SoftFilter):
     """
     A filter that applies a soft weighting to the augmented predictions.
@@ -184,10 +149,6 @@ class FirmFilter(SoftFilter):
         """
         Returns a mask based on a hard threshold applied to the augmented predictions.
         """
-
-        
-        # PACA = POCA -> weight with augmented pred confidence
-        # PACA        -> weight with original confidence
         soft_filter = self.get_mask(original_output,augmented_output)
         
         pred_o = original_output.get_predictions(propagated=True)
@@ -196,42 +157,3 @@ class FirmFilter(SoftFilter):
         mask = mask * soft_filter
         return mask
 
-
-class MetricThresholdFilter(BaseFilter):
-    """
-    A filter that applies a metric divergence threshold to the augmented predictions.
-    """
-    def __init__(self, metric_name: str = FilterMetric.BRIER_SCORE, threshold: float = 0.2):
-        """
-        Args:
-            metric: The metric to use for weighting the augmented predictions.
-        """
-        super().__init__()
-        self.metric = get_metric_fn(metric_name)
-        self.threshold = threshold
-
-    def mask(
-        self,
-        original_output: Prediction,
-        augmented_outputs: List[Prediction],
-        graph: List[Data]
-    ) -> torch.Tensor:
-        """
-        Returns a weighting based on a metric applied to the augmented predictions.
-        """
-        masks = []
-        probs_o = original_output.get_probabilities(propagated=True)
-        metric_scores = []
-        for augmented_output in augmented_outputs:
-            probs_a = augmented_output.get_probabilities(propagated=True)
-            metric_score = self.metric(probs_o, probs_a)
-            metric_scores.append(metric_score)
-
-        metric_scores = torch.stack(metric_scores, dim=0)
-        metric_mean = metric_scores.mean(dim=0) 
-        # cos_dist = get_metric_fn(FilterMetric.COSINE_SIMILARITY)
-        brier_fn = get_metric_fn(FilterMetric.BRIER_SCORE)
-        metric_dist = brier_fn(metric_mean, metric_scores)
-        metric_dist_norm = (metric_dist - metric_dist.min(0)[0]) / (metric_dist.max(0)[0] - metric_dist.min(0)[0] + 1e-8)
-        masks = (metric_dist_norm < self.threshold)
-        return masks

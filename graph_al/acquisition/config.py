@@ -147,13 +147,6 @@ class AcquisitionStrategyApproximateUncertaintyConfig(AcquisitionStrategyByAttri
     compute_as_ratio: bool = False # if True, it is computed as conf(alea) / conf(total), if False, we optimize the ratio of observing the remaining expected ground-truth
     features_only: bool = False # if True, only use the features for the uncertainty estimation
 
-    
-@dataclass
-class AcquisitionStrategyExpectedQueryConfig(AcquisitionStrategyByAttributeConfig):
-    type_: AcquisitionStrategyType = AcquisitionStrategyType.EXPECTED_QUERY
-    higher_is_better: bool = False 
-    
-
 
 @dataclass
 class AcquisitionStrategyAGELikeConfig(AcquisitionStrategyConfig):
@@ -240,7 +233,6 @@ cs.store(name="base_uncertainty_difference", node=AcquisitionStrategyUncertainty
 cs.store(name="base_approximate_uncertainty", node=AcquisitionStrategyApproximateUncertaintyConfig, group='acquisition_strategy')
 cs.store(name="base_galaxy", node=AcquisitionStrategyGalaxyConfig, group='acquisition_strategy')
 cs.store(name="base_badge", node=AcquisitionStrategyBadgeConfig, group='acquisition_strategy')
-ócs.store(name="base_expected_query", node=AcquisitionStrategyExpectedQueryConfig, group='acquisition_strategy')
 cs.store(name="base_geem_attribute", node=AcquisitionStrategyGEEMAttributeConfig, group='acquisition_strategy')
 cs.store(name="base_age_attribute", node=AcquisitionStrategyAGEAttributeConfig, group='acquisition_strategy')
 

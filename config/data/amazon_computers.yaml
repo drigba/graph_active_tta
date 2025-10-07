@@ -5,7 +5,6 @@ root: datagraph-al/data
 torch_geometric_dataset: AMAZON_COMPUTERS
 
 name: amazon_computers
-#path: /home/banfizsombor/work/uq-for-al-on-graphs/datagraph-ssl-data-raw/amazon_electronics_photo.npz
 #preprocessing: NONE
 num_classes: 10
 

@@ -4,6 +4,5 @@ defaults:
 root: datagraph-al/data
 torch_geometric_dataset: CORA_ML
 name: cora_ml
-#path: /home/banfizsombor/work/uq-for-al-on-graphs/datagraph-ssl-data-raw/cora_ml.npz
 #preprocessing: BAG_OF_WORDS
 num_classes: 7

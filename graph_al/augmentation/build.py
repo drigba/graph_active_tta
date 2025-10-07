@@ -7,7 +7,7 @@ from graph_al.augmentation.augmentation_functions import BaseAugmentationFunctio
 from graph_al.augmentation.base_augmentor import BaseAugmentor
 from graph_al.augmentation.config import AugmentorConfig, AugmentationConfig, FilterConfig, AugmentorType,AugmentationType, FilterType
 from graph_al.model.base import BaseModel
-from graph_al.augmentation.filters import NoFilter, HardFilter, BaseFilter, MetricWeightFilter, SoftFilter, FirmFilter, MetricThresholdFilter
+from graph_al.augmentation.filters import NoFilter, HardFilter, BaseFilter, SoftFilter, FirmFilter
 
 
 
@@ -85,13 +85,9 @@ def get_filter(config: FilterConfig) -> BaseFilter:
             return NoFilter()
         case FilterType.HARD_FILTER:
             return HardFilter()
-        case FilterType.METRIC_FILTER:
-            return MetricWeightFilter(metric_name=config.metric)
         case FilterType.SOFT_FILTER:
             return SoftFilter(mode=config.mode)
         case FilterType.FIRM_FILTER:
             return FirmFilter(mode=config.mode)
-        case FilterType.METRIC_THRESHOLD_FILTER:
-            return MetricThresholdFilter(metric_name=config.metric, threshold=config.threshold)
         case _:
             raise ValueError(f"Unknown filter type: {config.type_}")
