@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "graph_al"
 dynamic = ["version"]
 authors = [
-    {name = "Dominik Fuchsgruber", email = "d.fuchsgruber@tum.de"},
+    
 ]
 dependencies = [
     # PyTorch etc.

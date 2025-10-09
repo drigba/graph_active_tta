@@ -33,7 +33,6 @@ wandb:
   name: ~
   dir: ${output_base_dir}
   tags: ~
-  # log_internal_dir: ../../../../dev/null #/nfs/staff-ssd/fuchsgru/wandb/null # something that links to /dev/null to discard internal logs
 
 hydra:
   job:
