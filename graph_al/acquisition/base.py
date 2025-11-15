@@ -25,7 +25,6 @@ class BaseAcquisitionStrategy:
         self.balanced = config.balanced
         self.requires_model_prediction = config.requires_model_prediction
         self.verbose = config.verbose
-        self.scale = config.scale
         self.probs_list = []
         self.probs_o_list = []
         self.probs_unfiltered_list = []

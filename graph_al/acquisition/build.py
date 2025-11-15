@@ -11,7 +11,6 @@ from graph_al.acquisition.config import (
     AcquisitionStrategyApproximateUncertaintyConfig,
     AcquisitionStrategyGalaxyConfig,
     AcquisitionStrategyBadgeConfig,
-    AcquisitionStrategyExpectedQueryConfig,
     AcquisitionStrategyGEEMAttributeConfig,
     AcquisitionStrategyAGEAttributeConfig
     
@@ -84,8 +83,6 @@ def get_acquisition_strategy(config: AcquisitionStrategyConfig, dataset: Dataset
             return AcquisitionStrategyGalaxy(config) # type: ignore
         case AcquisitionStrategyBadgeConfig.type_:
             return AcquisitionStrategyBadge(config) # type: ignore
-        case AcquisitionStrategyExpectedQueryConfig.type_:
-            return AcquisitionStrategyExpectedQuery(config) # type: ignore
         case AcquisitionStrategyGEEMAttributeConfig.type_:
             return AcquisitionStrategyGEEMAttribute(config)
         case _:
