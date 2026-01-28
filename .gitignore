@@ -2,6 +2,7 @@
 
 output/
 output2/
+output3/
 logs/
 graph_al.egg-info/
 wandb/

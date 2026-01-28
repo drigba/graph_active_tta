@@ -50,7 +50,11 @@ class TorchGeometricDatasetType(StrEnum):
     AMAZON_PHOTOS = 'amazon_photos'
     AMAZON_COMPUTERS = 'amazon_computers'
     OGBN_ARXIV = 'ogbn_arxiv'
-    REDDIT = 'reddit'  
+    REDDIT = 'reddit'
+    FLICKR = 'flickr'  
+    ROMAN_EMPIRE = 'roman_empire'
+    AMAZON_RATINGS = 'amazon_ratings'
+    
     
 @unique
 class FeatureNormalization(StrEnum):

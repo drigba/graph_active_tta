@@ -1,0 +1,8 @@
+defaults:
+  - base_torch_geometric
+
+root: datagraph-al/data/flickr
+torch_geometric_dataset: FLICKR
+name: flickr
+num_classes: 7
+normalize: l2

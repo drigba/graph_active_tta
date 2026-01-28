@@ -1,4 +1,4 @@
-from graph_al.model.config import ModelConfig, GCNConfig, APPNPConfig, BayesianGCNConfig, GPNConfig, BayesOptimalConfig, SGCConfig, SEALConfig
+from graph_al.model.config import ModelConfig, GCNConfig, APPNPConfig, BayesianGCNConfig, GPNConfig, BayesOptimalConfig, SGCConfig, SEALConfig, GATConfig, SAGEConfig
 from graph_al.model.base import BaseModel, Ensemble
 from graph_al.model.gcn import GCN
 from graph_al.model.appnp import APPNP
@@ -8,6 +8,8 @@ from graph_al.model.bayes_optimal import BayesOptimal
 from graph_al.model.sgc import SGC
 from graph_al.data.base import Dataset
 from graph_al.model.seal import SEAL
+from graph_al.model.gat import GAT
+from graph_al.model.sage import SAGE
 
 import torch
 
@@ -27,6 +29,10 @@ def _get_model(config: ModelConfig, dataset: Dataset, generator: torch.Generator
             return SGC(config, dataset, generator) # type: ignore
         case SEALConfig.type_:
             return SEAL(config, dataset) # type: ignore
+        case GATConfig.type_:
+            return GAT(config, dataset) # type: ignore
+        case SAGEConfig.type_:
+            return SAGE(config, dataset) # type: ignore
         case _:
             raise ValueError(f'Unsupported model type {config.type_}')
         

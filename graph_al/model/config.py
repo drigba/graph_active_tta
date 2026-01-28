@@ -60,6 +60,17 @@ class GCNConfig(ModelConfigMonteCarloDropout, BaseGCNConfig):
     name: str | None = 'gcn'
     
 @dataclass
+class SAGEConfig(ModelConfigMonteCarloDropout, BaseGCNConfig):
+    """ Configuration for the GCN """ 
+    type_: ModelType = ModelType.SAGE
+    name: str | None = 'sage'
+@dataclass
+class GATConfig(ModelConfigMonteCarloDropout, BaseGCNConfig):
+    """ Configuration for the GCN """ 
+    type_: ModelType = ModelType.GAT
+    name: str | None = 'gat'
+    heads: int | None = 8
+@dataclass
 class APPNPConfig(ModelConfigMonteCarloDropout):
     """ Configuration for the GCN """ 
     
@@ -161,3 +172,5 @@ cs.store(name="base_gpn", node=GPNConfig, group='model')
 cs.store(name="base_bayes_optimal", node=BayesOptimalConfig, group='model')
 cs.store(name="base_sgc", node=SGCConfig, group='model')
 cs.store(name="base_seal", node=SEALConfig, group='model')
+cs.store(name="base_sage", node=SAGEConfig, group='model')
+cs.store(name="base_gat", node=GATConfig, group='model')

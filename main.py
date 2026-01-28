@@ -233,8 +233,8 @@ def main(config_dict: DictConfig) -> None:
                     )
                     iterator.set_description(message)  # type: ignore
 
-            all_preds.append(predictor.preds)
-            all_masks.append(predictor.all_masks)
+            # all_preds.append(predictor.preds)
+            # all_masks.append(predictor.all_masks)
             # After the budget is exhausted
             run_results = Results(
                 acquisition_results,

@@ -1,13 +1,14 @@
 defaults:
-  - base_gcn
+  - base_gat
   - trainer: sgd
 
-hidden_dims: [64]
+hidden_dims: [16]
 # dropout: 0.8
-dropout: 0.0
+dropout: 0.3
 inplace: False
 cached: True
-name: gcn
+name: gat
+heads: 4
 
 trainer:
   optimizer:

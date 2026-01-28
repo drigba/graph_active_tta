@@ -1,0 +1,10 @@
+defaults:
+#  - base_npz
+  - base_torch_geometric
+root: datagraph-al/data
+torch_geometric_dataset: ROMAN_EMPIRE
+
+name: roman_empire
+#preprocessing: NONE
+num_classes: 18
+

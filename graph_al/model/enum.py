@@ -9,6 +9,8 @@ class ModelType(StrEnum):
     BAYES_OPTIMAL = 'bayes_optimal'
     SGC = 'sgc'
     SEAL = 'seal'
+    GAT = 'gat'
+    SAGE = 'sage'
 
 @unique
 class ApproximationType(StrEnum):

@@ -29,6 +29,12 @@ class TorchGeometricDataset(BaseDataset):
                 tg_dataset = D.Amazon(config.root, 'photo', transform=transform)[0]
             case TorchGeometricDatasetType.REDDIT:
                 tg_dataset = D.Reddit(root=config.root, transform=transform)[0]
+            case TorchGeometricDatasetType.FLICKR:
+                tg_dataset = D.Flickr(root=config.root, transform=transform)[0]
+            case TorchGeometricDatasetType.ROMAN_EMPIRE:
+                tg_dataset = D.HeterophilousGraphDataset(name = "Roman-empire",root=config.root, transform=transform)[0]
+            case TorchGeometricDatasetType.AMAZON_RATINGS:
+                tg_dataset = D.HeterophilousGraphDataset(name = "Amazon-ratings",root=config.root, transform=transform)[0]
             case TorchGeometricDatasetType.OGBN_ARXIV:
                 raise NotImplementedError('We have not yet implemented ogbn-arxiv. What would be the split-pool?')
             case _:
@@ -39,13 +45,14 @@ class TorchGeometricDataset(BaseDataset):
         edge_index = tg_dataset.edge_index # type: ignore
         
         node_to_idx = {f'node_{idx}' : idx for idx in range(x.size(0))}
-        label_to_idx = {f'label_{idx}' : idx for idx in range(y.max().item() + 1)}
+        label_to_idx = {f'label_{idx}' : idx for idx in range(config.num_classes)}
         feature_to_idx = {f'feature_{idx}' : idx for idx in range(x.size(1))}
 
         super().__init__(
             node_features = x,
             edge_idxs = edge_index,
             labels = y,
+            num_classes = config.num_classes,
             node_to_idx = make_mapping_collatable(node_to_idx),
             label_to_idx = make_mapping_collatable(label_to_idx),
             feature_to_idx = make_mapping_collatable(feature_to_idx),
