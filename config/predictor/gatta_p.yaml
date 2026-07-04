@@ -2,5 +2,5 @@ defaults:
  - _self_
  - augmentor: graph_space
 
-type_: eqs
+type_: gatta_p
 number_of_augmentations: 200

@@ -15,9 +15,9 @@ from graph_al.augmentation.filters import BaseFilter, HardFilter, NoFilter, get_
 
 
 
-class EQSPredictor(BasePredictor):
+class GattaPPredictor(BasePredictor):
     """
-    An EQS predictor that uses the model to make predictions with an acquisition strategy.
+    A GATTA-P predictor that uses the model to make predictions with an acquisition strategy.
     """
 
     def __init__(
@@ -27,12 +27,14 @@ class EQSPredictor(BasePredictor):
         acquisition_strategy: BaseAcquisitionStrategy,
         augmentor: BaseAugmentor,
         number_of_augmentations: int = 1,
+        num_to_acquire_per_step: int = 1,
         generator: torch.Generator = None,
     ):
         super().__init__(
             model=model,
             device=device,
             acquisition_strategy=acquisition_strategy,
+            num_to_acquire_per_step=num_to_acquire_per_step,
             generator=generator,
         )
         self.augmentor = augmentor
@@ -87,7 +89,7 @@ class EQSPredictor(BasePredictor):
                 model=self.model,
                 dataset=dataset,
                 prediction=prediction,
-                num=1,
+                num=self.num_to_acquire(dataset),
                 model_config=self.model.config,
                 generator=self.generator,
             )

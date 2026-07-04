@@ -23,6 +23,7 @@ class BasePredictor:
         model: BaseModel,
         device: torch.device,
         acquisition_strategy: BaseAcquisitionStrategy,
+        num_to_acquire_per_step: int = 1,
         generator: torch.Generator = None,
     ):
         """
@@ -38,6 +39,10 @@ class BasePredictor:
         self.generator = (
             generator if generator is not None else torch.Generator(device=device)
         )
+        self.num_to_acquire_per_step = num_to_acquire_per_step
+
+    def num_to_acquire(self, dataset: Dataset) -> int:
+        return min(self.num_to_acquire_per_step, int(dataset.data.mask_train_pool.sum()))
 
     def update_model(self, model: BaseModel):
         """
@@ -88,7 +93,7 @@ class NormalPredictor(BasePredictor):
                 model=self.model,
                 dataset=dataset,
                 prediction=prediction,
-                num=1,
+                num=self.num_to_acquire(dataset),
                 model_config=self.model.config,
                 generator=self.generator,
             )
@@ -103,12 +108,11 @@ class InitialPredictor(BasePredictor):
                 model=self.model,
                 dataset=dataset,
                 prediction=prediction,
-                num=1,
+                num=self.num_to_acquire(dataset),
                 model_config=self.model.config,
                 generator=self.generator,
             )
         return prediction, acquired_idxs, acquisition_metrics
-
 
 
 

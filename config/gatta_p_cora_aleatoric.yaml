@@ -1,0 +1,30 @@
+defaults:
+  - main
+  - override /data: cora_ml
+  - override /model: gcn
+  - override /acquisition_strategy: entropy
+  - override /predictor: gatta_s
+  - override /predictor/augmentor/filter: hard_filter
+  - _self_
+
+seed: 42
+
+data:
+  num_splits: 5
+
+model:
+  num_inits: 5
+  cached: false
+
+predictor:
+  number_of_augmentations: 500
+  augmentor:
+    augmentations:
+      - type_: edge_dropout
+        p: 0.5
+      - type_: feature_noising
+        p: 0.4
+
+acquisition_strategy:
+  num_steps: ${eval:${data.num_classes} * 5 - \(${initial_acquisition_strategy.num_steps} * ${initial_acquisition_strategy.num_to_acquire_per_step}\)}
+  num_to_acquire_per_step: 1

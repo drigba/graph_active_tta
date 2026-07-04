@@ -1,0 +1,22 @@
+x-common-gpu: &common-gpu
+  gpus:
+    - device_ids: ["${GPU_DEVICE:?set GPU_DEVICE}"]
+
+services:
+  graph-al:
+    <<: *common-gpu
+    build: .
+    image: graph-active-tta:latest
+    working_dir: /app
+    shm_size: "8gb"
+    volumes:
+      - .:/app
+      - ./output2:/app/output2
+      - ./datagraph-al:/app/datagraph-al
+    environment:
+      PYTHONPATH: /app
+      WANDB_API_KEY: ${WANDB_API_KEY:-}
+      NVIDIA_DRIVER_CAPABILITIES: compute,utility
+      MPLCONFIGDIR: /tmp/matplotlib
+      XDG_CACHE_HOME: /tmp/cache
+    command: ["python", "main.py", "--config-name", "gatta_p_cora_aleatoric"]

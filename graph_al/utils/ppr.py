@@ -1,5 +1,4 @@
 import torch
-import torch_scatter
 import math
 from tqdm import tqdm
 
@@ -9,6 +8,7 @@ from torch import Tensor
 import numpy as np
 import scipy.sparse as sp
 from sklearn.preprocessing import normalize
+from graph_al.utils.scatter import scatter_sum
 
 def approximate_ppr_matrix(edge_index: Int[Tensor, '2 num_edges'], edge_weights: Float[Tensor, 'num_edges'],
                            teleport_probability: float = 0.2, num_iterations: int = 10, verbose: bool=True,
@@ -20,7 +20,7 @@ def approximate_ppr_matrix(edge_index: Int[Tensor, '2 num_edges'], edge_weights:
         
     idx_src, idx_target = edge_index
     # Check for a stochastic matrix
-    sums = torch_scatter.scatter_add(edge_weights, idx_src, dim=-1, dim_size=num_nodes)
+    sums = scatter_sum(edge_weights, idx_src, dim=-1, dim_size=num_nodes)
     assert torch.allclose(sums, torch.tensor(1.0), atol=1e-4), \
         f'Expected stochastic matrix for PPR approximation but got {sums[~torch.isclose(sums, torch.tensor(1.0), atol=1e-4)]}' + \
             f' at indices {torch.where(~torch.isclose(sums, torch.tensor(1.0), atol=1e-4))[0]}'
@@ -53,7 +53,7 @@ def approximate_ppr_scores(edge_index: Int[Tensor, '2 num_edges'], edge_weights:
         
     idx_src, idx_target = edge_index
     # Check for a stochastic matrix
-    sums = torch_scatter.scatter_add(edge_weights, idx_src, dim=-1, dim_size=num_nodes)
+    sums = scatter_sum(edge_weights, idx_src, dim=-1, dim_size=num_nodes)
     assert torch.allclose(sums, torch.tensor(1.0), atol=1e-4), \
         f'Expected stochastic matrix for PPR approximation but got {sums[~torch.isclose(sums, torch.tensor(1.0), atol=1e-4)]}' + \
             f' at indices {torch.where(~torch.isclose(sums, torch.tensor(1.0), atol=1e-4))[0]}'

@@ -1,10 +1,10 @@
 import torch
 import torch.nn.functional as F
 from torch import Tensor
-import torch_scatter
 
 import graph_al.model.gpn.distributions as UD
 import torch.distributions as D
+from graph_al.utils.scatter import scatter_sum
 
 from jaxtyping import jaxtyped, Int, Float
 from typeguard import typechecked
@@ -26,7 +26,7 @@ def balanced_loss_weights(labels: Int[Tensor, "num_samples"], beta: float=0.999,
     References:
         https://arxiv.org/pdf/1901.05555.pdf
     """
-    counts = torch_scatter.scatter_sum(torch.ones_like(labels), labels, dim_size=num_classes)
+    counts = scatter_sum(torch.ones_like(labels), labels, dim_size=num_classes)
     num_classes = counts.size(0)
     effective_counts = 1 - beta / (1 - torch.exp(counts * torch.log(torch.tensor(beta, device=counts.device))))
     if normalize:

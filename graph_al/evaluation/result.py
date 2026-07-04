@@ -65,7 +65,8 @@ class Results:
     
     @jaxtyped(typechecker=typechecked)
     def __getitem__(self, key: MetricTemplate) -> \
-        Int[Tensor, 'num_acquisitions num_classes'] | Float[Tensor, 'num_acquisitions'] | Int[Tensor, 'num_acquisitions']:
+        Int[Tensor, 'num_acquisitions num_classes'] | Float[Tensor, 'num_acquisitions num_classes'] | \
+            Float[Tensor, 'num_acquisitions'] | Int[Tensor, 'num_acquisitions']:
         match key.name:
             case MetricName.NUM_ACQUIRED:
                 return torch.tensor([result.num_acquired for result in self.results])

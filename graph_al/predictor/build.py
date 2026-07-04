@@ -6,8 +6,8 @@ from graph_al.acquisition.base import BaseAcquisitionStrategy
 from graph_al.augmentation.base_augmentor import BaseAugmentor
 from graph_al.data.base import Dataset
 from graph_al.predictor.config import PredictorConfig
-from graph_al.predictor.eqs import EQSPredictor
-from graph_al.predictor.qes import QESPredictor
+from graph_al.predictor.gatta_p import GattaPPredictor
+from graph_al.predictor.gatta_s import GattaSPredictor
 from torch import Generator
 from typing import Optional
 from graph_al.augmentation.build import get_augmentor
@@ -18,6 +18,7 @@ def get_predictor(
     model: BaseModel,
     device: torch.device,
     acquisition_strategy: BaseAcquisitionStrategy,
+    num_to_acquire_per_step: int,
     generator: Optional[Generator],
 ) -> BasePredictor:
     """
@@ -29,32 +30,35 @@ def get_predictor(
                 model=model,
                 device=device,
                 acquisition_strategy=acquisition_strategy,
+                num_to_acquire_per_step=num_to_acquire_per_step,
                 generator=generator,
             )
-        case PredictorType.EQS:
+        case PredictorType.GATTA_P:
             augmentor = get_augmentor(
                 config.augmentor,
                 model=model,
             ) 
-            return EQSPredictor(
+            return GattaPPredictor(
                 model=model,
                 device=device,
                 acquisition_strategy=acquisition_strategy,
                 augmentor=augmentor,
                 number_of_augmentations=getattr(config, "number_of_augmentations", 1),
+                num_to_acquire_per_step=num_to_acquire_per_step,
                 generator=generator,
             )
-        case PredictorType.QES:
+        case PredictorType.GATTA_S:
             augmentor = get_augmentor(
                 config.augmentor,
                 model=model,
             ) 
-            return QESPredictor(
+            return GattaSPredictor(
                 model=model,
                 device=device,
                 acquisition_strategy=acquisition_strategy,
                 augmentor=augmentor,
                 number_of_augmentations=getattr(config, "number_of_augmentations", 1),
+                num_to_acquire_per_step=num_to_acquire_per_step,
                 generator=generator,
             )
         case _:

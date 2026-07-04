@@ -7,13 +7,13 @@ from graph_al.model.config import ModelConfig
 from collections import defaultdict
 
 import torch
-import torch_scatter
 from torch import Tensor, Generator
 from jaxtyping import Int, Bool, jaxtyped
 from typeguard import typechecked
 from typing import Tuple, Dict, Any, List
 
 from graph_al.model.base import  BaseModel
+from graph_al.utils.scatter import scatter_sum
 
 
 
@@ -130,7 +130,7 @@ class BaseAcquisitionStrategy:
         mask = dataset.data.mask_train_pool & (~mask_sampled) & self.base_sampling_mask(model, dataset, generator)
         if self.balanced:
             y = dataset.data.y[dataset.data.mask_train | mask_sampled]
-            counts = torch_scatter.scatter_add(torch.ones_like(y), y, dim_size=dataset.data.num_classes)
+            counts = scatter_sum(torch.ones_like(y), y, dim_size=dataset.data.num_classes)
             for label in torch.argsort(counts).detach().cpu().tolist():
                 mask_class = mask & (dataset.data.y == label)
                 if mask_class.sum() > 0:

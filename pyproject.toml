@@ -18,12 +18,11 @@ dependencies = [
     "typeguard == 2.13.3", # we can not afford any more recent version, as it clashes with jaxtyped...
     "jaxtyping",
     "torch_geometric",
-    "torch-scatter",
     "pyro-ppl",
     "scikit-learn-extra",
 
     # General science & ml
-    "numpy",
+    "numpy >= 1.26, < 2",
     "scipy",
     "scikit-learn",
     "pandas",

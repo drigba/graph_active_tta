@@ -90,7 +90,7 @@ class Prediction:
         
 
     @jaxtyped(typechecker=typechecked)
-    def get_predictions(self, propagated: bool = True) -> Float[Tensor, 'num_samples num_nodes'] | None:
+    def get_predictions(self, propagated: bool = True) -> Int[Tensor, 'num_nodes'] | None:
 
         probabilities = self.get_probabilities(propagated=propagated)
         if probabilities is not None:

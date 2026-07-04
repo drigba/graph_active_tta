@@ -10,7 +10,6 @@ from graph_al.model.config import ApproximationType
 
 import numpy as np
 import torch
-import torch_scatter
 import torch_geometric.nn as tgnn
 from sklearn.linear_model import LogisticRegression
 from sklearn.exceptions import NotFittedError
@@ -147,4 +146,3 @@ class MulticlassLogisticRegression(nn.Module):
         probs = F.softmax(logits, dim=1)    # same as predict_proba
         return logits, probs
                 
-

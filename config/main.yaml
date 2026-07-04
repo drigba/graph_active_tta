@@ -6,7 +6,7 @@ defaults:
   - acquisition_strategy: entropy
   - initial_acquisition_strategy: balanced
   - evaluation: standard_no_plots
-  - predictor: qes  # or eqs, qes
+  - predictor: gatta_s  # or gatta_p, gatta_s
   - _self_
 
 initial_acquisition_strategy:

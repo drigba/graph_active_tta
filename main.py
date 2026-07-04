@@ -149,9 +149,16 @@ def main(config_dict: DictConfig) -> None:
                 model=model,
                 device=device,
                 acquisition_strategy=acquisition_strategy,
+                num_to_acquire_per_step=config.acquisition_strategy.num_to_acquire_per_step,
                 generator=generator,
             )
-            initial_predictor = InitialPredictor(model, device, initial_acquisition_strategy, generator)
+            initial_predictor = InitialPredictor(
+                model,
+                device,
+                initial_acquisition_strategy,
+                config.initial_acquisition_strategy.num_to_acquire_per_step,
+                generator,
+            )
 
             acquisition_step = 0
             acquisition_results = []

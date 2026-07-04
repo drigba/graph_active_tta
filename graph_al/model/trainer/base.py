@@ -14,7 +14,6 @@ from graph_al.evaluation.enum import MetricName, MetricTemplate
 from graph_al.evaluation.calibration import compute_ece
 
 import torch
-import torch_scatter
 from torchmetrics.functional import accuracy, f1_score
 
 

@@ -5,7 +5,6 @@ from torch import Tensor
 from torch.utils.data import Dataset as TorchDataset
 from torch_geometric.data import Data as TorchGeometricData
 import torch_geometric.nn as tgnn
-import torch_scatter
 from copy import copy, deepcopy
 import itertools
 
@@ -13,6 +12,7 @@ from graph_al.data.config import DataConfig, DatasetSplit
 from graph_al.utils.sampling import sample_from_mask
 from graph_al.utils.ppr import approximate_ppr_matrix, approximate_ppr_scores
 from graph_al.utils.logging import get_logger
+from graph_al.utils.scatter import scatter_sum
 from graph_al.data.transform import normalize_features
 from graph_al.data.enum import *
 
@@ -68,11 +68,11 @@ class BaseDataset:
         
     @property
     def node_degrees_in(self) -> Int[Tensor, 'num_nodes']:
-        return torch_scatter.scatter_add(torch.ones(self.edge_idxs.size(1)), self.edge_idxs[1])
+        return scatter_sum(torch.ones(self.edge_idxs.size(1)), self.edge_idxs[1], dim_size=self.num_nodes)
         
     @property
     def node_degrees_out(self) -> Int[Tensor, 'num_nodes']:
-        return torch_scatter.scatter_add(torch.ones(self.edge_idxs.size(1)), self.edge_idxs[0])
+        return scatter_sum(torch.ones(self.edge_idxs.size(1)), self.edge_idxs[0], dim_size=self.num_nodes)
         
     @property
     def num_nodes(self) -> int:
@@ -104,11 +104,11 @@ class Data(TorchGeometricData):
 
     @property
     def node_degrees_in(self) -> Int[Tensor, 'num_nodes']:
-        return torch_scatter.scatter_add(torch.ones(self.edge_index.size(1), device=self.edge_index.device), self.edge_index[1])
+        return scatter_sum(torch.ones(self.edge_index.size(1), device=self.edge_index.device), self.edge_index[1], dim_size=self.num_nodes)
         
     @property
     def node_degrees_out(self) -> Int[Tensor, 'num_nodes']:
-        return torch_scatter.scatter_add(torch.ones(self.edge_index.size(1), device=self.edge_index.device), self.edge_index[0])
+        return scatter_sum(torch.ones(self.edge_index.size(1), device=self.edge_index.device), self.edge_index[0], dim_size=self.num_nodes)
 
     @property
     def num_train(self) -> int:
@@ -117,13 +117,13 @@ class Data(TorchGeometricData):
     @property
     @jaxtyped(typechecker=typechecked)
     def class_counts(self) -> Int[Tensor, 'num_classes']:
-        return torch_scatter.scatter_add(torch.ones_like(self.y), self.y, dim_size=self.num_classes)
+        return scatter_sum(torch.ones_like(self.y), self.y, dim_size=self.num_classes)
     
     @property
     @jaxtyped(typechecker=typechecked)
     def class_counts_train(self) -> Int[Tensor, 'num_classes']:
         y = self.y[self.mask_train]
-        return torch_scatter.scatter_add(torch.ones_like(y), y, dim_size=self.num_classes)
+        return scatter_sum(torch.ones_like(y), y, dim_size=self.num_classes)
     
     @property
     @jaxtyped(typechecker=typechecked)
@@ -224,7 +224,7 @@ class Data(TorchGeometricData):
             for _ in range(k):
                 # Perform message passing
                 messages = x[src] * edge_weight[:, None] # type: ignore
-                x = torch_scatter.scatter_add(messages, dst, dim=0, dim_size=x.size(0))
+                x = scatter_sum(messages, dst, dim=0, dim_size=x.size(0))
         if cache:
             setattr(self, key, x)
         torch.cuda.empty_cache()
@@ -234,7 +234,7 @@ class Data(TorchGeometricData):
     def stochastic_adjacency_edge_weights(self) -> Float[Tensor, 'num_edges']:
         """ Gets the weight of the stochastic normalized adjacency matrix. """
         edge_weights = torch.ones(self.edge_index.size(1), device=self.edge_index.device)
-        degree = torch_scatter.scatter_add(edge_weights, self.edge_index[0], dim_size=self.num_nodes)
+        degree = scatter_sum(edge_weights, self.edge_index[0], dim_size=self.num_nodes)
 
         edge_weights /= (degree[self.edge_index[0]] + 1e-12)
         return edge_weights
