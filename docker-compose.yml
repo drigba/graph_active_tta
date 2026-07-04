@@ -10,7 +10,7 @@ services:
     working_dir: /app
     shm_size: "8gb"
     volumes:
-      - .:/app
+      - ./config:/app/config
       - ./output2:/app/output2
       - ./datagraph-al:/app/datagraph-al
     environment:
